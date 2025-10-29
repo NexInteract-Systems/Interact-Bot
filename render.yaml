@@ -1,0 +1,39 @@
+services:
+  - type: worker
+    name: ai-discord-bot
+    env: python
+    plan: starter  # use at least Starter to keep 24/7; free may sleep/stop
+    buildCommand: |
+      pip install -r requirements.txt
+    startCommand: |
+      python -u main.py
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      # Provide these in Render dashboard or via Render secrets; values here are placeholders
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false
+      - key: OWNER_USER_ID
+        value: "733972245575237632"
+      - key: FFMPEG_PATH
+        value: "/usr/bin/ffmpeg"  # installed via apt packages
+      - key: BOT_STATUS
+        value: online
+      - key: ACTIVITY_TYPE
+        value: listening
+      - key: ACTIVITY_NAME
+        value: "/chat"
+      - key: ACTIVITY_STREAM_URL
+        value: ""
+packages:
+  apt:
+    - ffmpeg

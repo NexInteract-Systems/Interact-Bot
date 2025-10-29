@@ -1,0 +1,25 @@
+{
+  "models": {
+    "google/gemma-3n-e2b-it:free": {
+      "status": "online",
+      "last_used": 1761140011.6051269,
+      "usage_count": 32,
+      "error_count": 0,
+      "avg_response_time": 1174093333.2433848
+    },
+    "nvidia/nemotron-nano-9b-v2:free": {
+      "status": "online",
+      "last_used": 1761023868.6645212,
+      "usage_count": 19,
+      "error_count": 0,
+      "avg_response_time": 587003939.4605491
+    },
+    "cognitivecomputations/dolphin-mistral-24b-venice-edition:free": {
+      "status": "online",
+      "last_used": 1761023871.816435,
+      "usage_count": 27,
+      "error_count": 0,
+      "avg_response_time": 587007936.0570027
+    }
+  }
+}

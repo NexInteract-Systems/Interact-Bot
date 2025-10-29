@@ -209,3 +209,17 @@ echo "  - Monitor costs in Azure Portal"
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+

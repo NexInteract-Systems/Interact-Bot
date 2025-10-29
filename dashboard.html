@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Discord Bot - Model Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .model-card {
+            transition: all 0.3s ease;
+        }
+        .model-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .status-online { color: #10b981; }
+        .status-offline { color: #ef4444; }
+        .status-degraded { color: #f59e0b; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="gradient-bg shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-white text-xl font-bold">
+                            <i class="fas fa-robot mr-2"></i>
+                            AI Discord Bot Dashboard
+                        </h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-white">
+                        <i class="fas fa-user mr-1"></i>
+                        <span id="user-info">Loading...</span>
+                    </div>
+                    <button onclick="logout()" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-2 rounded-md text-sm font-medium transition">
+                        <i class="fas fa-sign-out-alt mr-1"></i>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8" x-data="dashboard()">
+        <!-- Header -->
+        <div class="px-4 py-6 sm:px-0">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                        Model Selection Dashboard
+                    </h2>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Choose your preferred AI model for Discord conversations
+                    </p>
+                </div>
+                <div class="mt-4 flex md:mt-0 md:ml-4">
+                    <button @click="refreshStats()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-sync-alt mr-1"></i>
+                        Refresh Stats
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-brain text-blue-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Models</dt>
+                                <dd class="text-lg font-medium text-gray-900" x-text="stats.total_models">-</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Online Models</dt>
+                                <dd class="text-lg font-medium text-gray-900" x-text="stats.online_models">-</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-yellow-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Degraded Models</dt>
+                                <dd class="text-lg font-medium text-gray-900" x-text="stats.degraded_models">-</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-times-circle text-red-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Offline Models</dt>
+                                <dd class="text-lg font-medium text-gray-900" x-text="stats.offline_models">-</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Selection -->
+        <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    <i class="fas fa-cog mr-2"></i>
+                    Current Model Selection
+                </h3>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Your preferred model:</p>
+                        <p class="text-lg font-semibold text-gray-900" x-text="currentModel.name">Loading...</p>
+                        <p class="text-sm text-gray-500" x-text="currentModel.description">Loading...</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                              :class="getStatusClass(currentModel.status)">
+                            <i :class="getStatusIcon(currentModel.status)" class="mr-1"></i>
+                            <span x-text="currentModel.status"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Selection -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-6">
+                    <i class="fas fa-list mr-2"></i>
+                    Available Models
+                </h3>
+                
+                <!-- Filter and Search -->
+                <div class="mb-6 flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <input type="text" 
+                               x-model="searchQuery" 
+                               placeholder="Search models..." 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="sm:w-48">
+                        <select x-model="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Status</option>
+                            <option value="online">Online</option>
+                            <option value="offline">Offline</option>
+                            <option value="degraded">Degraded</option>
+                        </select>
+                    </div>
+                    <div class="sm:w-48">
+                        <select x-model="providerFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Providers</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="gemini">Google Gemini</option>
+                            <option value="anthropic">Anthropic</option>
+                            <option value="openrouter">OpenRouter</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Models Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <template x-for="model in filteredModels" :key="model.id">
+                        <div class="model-card bg-white border border-gray-200 rounded-lg p-6 cursor-pointer"
+                             :class="{'ring-2 ring-blue-500 bg-blue-50': currentModel.id === model.id}"
+                             @click="selectModel(model)">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h4 class="text-lg font-semibold text-gray-900" x-text="model.name"></h4>
+                                    <p class="text-sm text-gray-500" x-text="model.provider"></p>
+                                </div>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                      :class="getStatusClass(model.status)">
+                                    <i :class="getStatusIcon(model.status)" class="mr-1"></i>
+                                    <span x-text="model.status"></span>
+                                </span>
+                            </div>
+                            
+                            <p class="text-sm text-gray-600 mb-4" x-text="model.description"></p>
+                            
+                            <div class="space-y-2 text-sm text-gray-500">
+                                <div class="flex justify-between">
+                                    <span>Max Tokens:</span>
+                                    <span x-text="model.max_tokens.toLocaleString()"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Cost per 1K tokens:</span>
+                                    <span x-text="'$' + model.cost_per_1k_tokens.toFixed(4)"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Usage Count:</span>
+                                    <span x-text="model.usage_count"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Avg Response Time:</span>
+                                    <span x-text="model.avg_response_time.toFixed(2) + 's'"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 flex items-center justify-between">
+                                <div class="flex space-x-2">
+                                    <span x-show="model.supports_images" 
+                                          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                        <i class="fas fa-image mr-1"></i>
+                                        Images
+                                    </span>
+                                    <span x-show="model.supports_functions" 
+                                          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-cogs mr-1"></i>
+                                        Functions
+                                    </span>
+                                </div>
+                                <button x-show="currentModel.id !== model.id"
+                                        @click.stop="selectModel(model)"
+                                        class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition">
+                                    Select
+                                </button>
+                                <span x-show="currentModel.id === model.id"
+                                      class="text-blue-600 font-medium">
+                                    <i class="fas fa-check mr-1"></i>
+                                    Selected
+                                </span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Comparison -->
+        <div class="mt-8 bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-6">
+                    <i class="fas fa-balance-scale mr-2"></i>
+                    Model Comparison
+                </h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-2">Test Prompt</h4>
+                        <textarea x-model="testPrompt" 
+                                  placeholder="Enter a test prompt to compare models..."
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24"></textarea>
+                        <button @click="compareModels()" 
+                                :disabled="!testPrompt.trim()"
+                                class="mt-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium transition">
+                            <i class="fas fa-play mr-1"></i>
+                            Compare Models
+                        </button>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-2">Comparison Results</h4>
+                        <div class="space-y-3" x-show="comparisonResults.length > 0">
+                            <template x-for="result in comparisonResults" :key="result.model">
+                                <div class="border border-gray-200 rounded-lg p-3">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="font-medium text-gray-900" x-text="result.model"></span>
+                                        <span class="text-sm text-gray-500" x-text="result.responseTime + 's'"></span>
+                                    </div>
+                                    <p class="text-sm text-gray-600" x-text="result.response"></p>
+                                </div>
+                            </template>
+                        </div>
+                        <div x-show="comparisonResults.length === 0" class="text-gray-500 text-sm">
+                            No comparison results yet. Enter a test prompt and click "Compare Models".
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function dashboard() {
+            return {
+                stats: {
+                    total_models: 0,
+                    online_models: 0,
+                    offline_models: 0,
+                    degraded_models: 0
+                },
+                models: [],
+                currentModel: {},
+                searchQuery: '',
+                statusFilter: '',
+                providerFilter: '',
+                testPrompt: '',
+                comparisonResults: [],
+                
+                get filteredModels() {
+                    return this.models.filter(model => {
+                        const matchesSearch = model.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                                           model.description.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        const matchesStatus = !this.statusFilter || model.status === this.statusFilter;
+                        const matchesProvider = !this.providerFilter || model.provider === this.providerFilter;
+                        return matchesSearch && matchesStatus && matchesProvider;
+                    });
+                },
+                
+                getStatusClass(status) {
+                    switch(status) {
+                        case 'online': return 'bg-green-100 text-green-800';
+                        case 'offline': return 'bg-red-100 text-red-800';
+                        case 'degraded': return 'bg-yellow-100 text-yellow-800';
+                        default: return 'bg-gray-100 text-gray-800';
+                    }
+                },
+                
+                getStatusIcon(status) {
+                    switch(status) {
+                        case 'online': return 'fas fa-check-circle';
+                        case 'offline': return 'fas fa-times-circle';
+                        case 'degraded': return 'fas fa-exclamation-triangle';
+                        default: return 'fas fa-question-circle';
+                    }
+                },
+                
+                async selectModel(model) {
+                    try {
+                        const response = await fetch('/api/set-model', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ model_id: model.id })
+                        });
+                        
+                        if (response.ok) {
+                            this.currentModel = model;
+                            this.showNotification('Model updated successfully!', 'success');
+                        } else {
+                            this.showNotification('Failed to update model', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error selecting model:', error);
+                        this.showNotification('Error updating model', 'error');
+                    }
+                },
+                
+                async refreshStats() {
+                    try {
+                        const response = await fetch('/api/stats');
+                        const data = await response.json();
+                        this.stats = data.stats;
+                        this.models = Object.values(data.models);
+                        this.currentModel = data.current_model;
+                    } catch (error) {
+                        console.error('Error refreshing stats:', error);
+                    }
+                },
+                
+                async compareModels() {
+                    if (!this.testPrompt.trim()) return;
+                    
+                    this.comparisonResults = [];
+                    const testModels = this.models.filter(m => m.status === 'online').slice(0, 3);
+                    
+                    for (const model of testModels) {
+                        try {
+                            const startTime = Date.now();
+                            const response = await fetch('/api/test-model', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ 
+                                    model_id: model.id, 
+                                    prompt: this.testPrompt 
+                                })
+                            });
+                            
+                            const data = await response.json();
+                            const responseTime = (Date.now() - startTime) / 1000;
+                            
+                            this.comparisonResults.push({
+                                model: model.name,
+                                response: data.response || 'No response',
+                                responseTime: responseTime.toFixed(2)
+                            });
+                        } catch (error) {
+                            console.error(`Error testing model ${model.name}:`, error);
+                            this.comparisonResults.push({
+                                model: model.name,
+                                response: 'Error: ' + error.message,
+                                responseTime: 0
+                            });
+                        }
+                    }
+                },
+                
+                showNotification(message, type) {
+                    // Simple notification - you can enhance this with a proper notification system
+                    alert(message);
+                },
+                
+                init() {
+                    this.refreshStats();
+                    // Refresh stats every 30 seconds
+                    setInterval(() => this.refreshStats(), 30000);
+                }
+            }
+        }
+        
+        function logout() {
+            // Implement logout functionality
+            window.location.href = '/logout';
+        }
+        
+        // Load user info
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('/api/user-info');
+                const data = await response.json();
+                document.getElementById('user-info').textContent = data.username || 'Unknown User';
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        });
+    </script>
+</body>
+</html>

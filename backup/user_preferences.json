@@ -1,0 +1,16 @@
+{
+  "733972245575237632": {
+    "user_id": "733972245575237632",
+    "preferred_model": "google/gemma-3n-e2b-it:free",
+    "fallback_models": [],
+    "custom_settings": {},
+    "last_updated": 1761050427.7552307
+  },
+  "1091040706719653918": {
+    "user_id": "1091040706719653918",
+    "preferred_model": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+    "fallback_models": [],
+    "custom_settings": {},
+    "last_updated": 1761023428.63057
+  }
+}
